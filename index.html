@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Our Story</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#10060b}
+    iframe{position:fixed;inset:0;width:100%;height:100%;border:0;opacity:1;transition:opacity .8s ease}
+    iframe.is-leaving{opacity:0;pointer-events:none}
+    audio{display:none}
+    @media(prefers-reduced-motion:reduce){iframe{transition:none}}
+  </style>
+</head>
+<body>
+  <audio id="love-music" src="./index_files/music.mp3" autoplay muted loop preload="auto"></audio>
+  <iframe id="birthday" src="./birthday.html" title="Birthday greeting" allow="autoplay"></iframe>
+  <script>
+    (() => {
+      const birthday = document.getElementById('birthday');
+      const music = document.getElementById('love-music');
+      let timer = null;
+      let transitioned = false;
+      const startMusic = () => {
+        music.muted = false;
+        const play = music.play();
+        if (play) play.catch(() => {});
+      };
+      window.addEventListener('message', (event) => {
+        if (event.source === birthday.contentWindow) {
+          if (event.data?.type === 'arrow-hit') {
+            music.currentTime = 0;
+            startMusic();
+            return;
+          }
+          if (transitioned || event.data?.type !== 'birthday-animation-finished') return;
+          transitioned = true;
+          birthday.classList.add('is-leaving');
+          window.setTimeout(() => {
+            birthday.remove();
+            timer = document.createElement('iframe');
+            timer.src = './timer.html';
+            timer.title = 'Our story and relationship timer';
+            timer.allow = 'autoplay';
+            document.body.appendChild(timer);
+          }, 800);
+          return;
+        }
+        if (!timer || event.source !== timer.contentWindow) return;
+        if (event.data?.type === 'music-start') {
+          startMusic();
+        } else if (event.data?.type === 'music-toggle') {
+          if (event.data.playing) startMusic();
+          else music.pause();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
